@@ -28,11 +28,7 @@ app.include_router(api_router, prefix="/api")
 
 @app.on_event("startup")
 async def startup_event():
-    # Preload ASR if model files are available
-    try:
-        asr_engine.load_model()
-    except Exception as e:
-        print(f"ASR initial load note: {e}")
+    print("Offline Farmer Voice Assistant API started. ASR models will load on demand.")
 
 @app.get("/")
 def root():
