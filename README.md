@@ -60,7 +60,7 @@ Unlike translation tools, **Kisan Vaani** is a true **farmer-to-assistant conver
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/NISHANTTMAURYA/offline-farmer-assistant.git
+git clone https://github.com/Abhi-engg/offline-farmer-assistant.git
 cd offline-farmer-assistant
 ```
 
