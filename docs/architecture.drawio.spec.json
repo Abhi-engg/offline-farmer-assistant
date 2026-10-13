@@ -1,0 +1,219 @@
+{
+  "page": "Kisan Vaani Architecture",
+  "pageId": "kisan-vaani-architecture",
+  "title": "Kisan Vaani — Offline AI Voice Assistant Architecture",
+  "subtitle": "Modular Offline-First Indic Conversational Voice Pipeline for Indian Farmers",
+  "layout": { "originX": 150, "originY": 160, "colPitch": 280, "rowPitch": 180 },
+  "boundaries": [
+    {
+      "id": "client_box",
+      "kind": "scope",
+      "label": "1. Client Layer (Farmer Offline Device)",
+      "color": "#16A34A",
+      "dashed": true,
+      "col": 0,
+      "row": 0,
+      "cols": 1,
+      "rows": 3,
+      "padLeft": 30,
+      "padTop": 40,
+      "padRight": 30,
+      "padBottom": 20
+    },
+    {
+      "id": "server_box",
+      "kind": "scope",
+      "label": "2. Local Edge Application Server (FastAPI on Port 8000)",
+      "color": "#2563EB",
+      "dashed": true,
+      "col": 1,
+      "row": 0,
+      "cols": 3,
+      "rows": 4,
+      "padLeft": 40,
+      "padTop": 40,
+      "padRight": 40,
+      "padBottom": 30
+    },
+    {
+      "id": "pipeline_box",
+      "kind": "scope",
+      "label": "3. Four-Stage Offline AI Pipeline",
+      "color": "#9333EA",
+      "dashed": false,
+      "parent": "server_box",
+      "col": 2,
+      "row": 0,
+      "cols": 1,
+      "rows": 4,
+      "padLeft": 25,
+      "padTop": 35,
+      "padRight": 25,
+      "padBottom": 20
+    },
+    {
+      "id": "kb_box",
+      "kind": "scope",
+      "label": "4. Local Knowledge & Advisory Store",
+      "color": "#D97706",
+      "dashed": false,
+      "parent": "server_box",
+      "col": 3,
+      "row": 0,
+      "cols": 1,
+      "rows": 3,
+      "padLeft": 25,
+      "padTop": 35,
+      "padRight": 25,
+      "padBottom": 20
+    }
+  ],
+  "nodes": [
+    {
+      "id": "farmer",
+      "kind": "box",
+      "label": "Indian Farmer (Kisan)\nRegional Voice Input",
+      "col": 0,
+      "row": 0,
+      "parent": "client_box",
+      "width": 180,
+      "height": 90
+    },
+    {
+      "id": "ui",
+      "kind": "box",
+      "label": "React 19 + Vite Frontend\nNative Indic Script Selector\nLarge Touch Mic Button",
+      "col": 0,
+      "row": 1,
+      "parent": "client_box",
+      "width": 180,
+      "height": 100
+    },
+    {
+      "id": "mic",
+      "kind": "box",
+      "label": "MediaRecorder Capture\n16kHz WAV / WebM Audio",
+      "col": 0,
+      "row": 2,
+      "parent": "client_box",
+      "width": 180,
+      "height": 80
+    },
+    {
+      "id": "gateway",
+      "kind": "box",
+      "label": "FastAPI Gateway\n/api/voice/ask\n/api/languages, /api/status",
+      "col": 1,
+      "row": 1,
+      "parent": "server_box",
+      "width": 190,
+      "height": 100
+    },
+    {
+      "id": "session",
+      "kind": "box",
+      "label": "Session Memory\nMulti-turn Dialogue State",
+      "col": 1,
+      "row": 2,
+      "parent": "server_box",
+      "width": 190,
+      "height": 80
+    },
+    {
+      "id": "asr",
+      "kind": "box",
+      "label": "Stage 1: ASR Engine\nfaster-whisper (int8)\nSilero VAD + Indic Hints",
+      "col": 2,
+      "row": 0,
+      "parent": "pipeline_box",
+      "width": 200,
+      "height": 90
+    },
+    {
+      "id": "rag",
+      "kind": "box",
+      "label": "Stage 2: Indic RAG Retriever\nBM25 + Semantic Search\nConfidence Guardrail",
+      "col": 2,
+      "row": 1,
+      "parent": "pipeline_box",
+      "width": 200,
+      "height": 90
+    },
+    {
+      "id": "llm",
+      "kind": "box",
+      "label": "Stage 3: Grounded LLM\nQwen2.5 / llama.cpp\nSafe Non-Hallucinatory Advice",
+      "col": 2,
+      "row": 2,
+      "parent": "pipeline_box",
+      "width": 200,
+      "height": 90
+    },
+    {
+      "id": "tts",
+      "kind": "box",
+      "label": "Stage 4: Regional TTS\nedge-tts / pyttsx3 Fallback\nLocal Indic Speech Synthesis",
+      "col": 2,
+      "row": 3,
+      "parent": "pipeline_box",
+      "width": 200,
+      "height": 90
+    },
+    {
+      "id": "icar",
+      "kind": "box",
+      "label": "ICAR & KVK Advisory DB\nCrop Diseases, Pests & NPK",
+      "col": 3,
+      "row": 0,
+      "parent": "kb_box",
+      "width": 190,
+      "height": 80
+    },
+    {
+      "id": "schemes",
+      "kind": "box",
+      "label": "Govt Schemes DB\nPM-KISAN, PMFBY, Soil Card",
+      "col": 3,
+      "row": 1,
+      "parent": "kb_box",
+      "width": 190,
+      "height": 80
+    },
+    {
+      "id": "cache",
+      "kind": "box",
+      "label": "Audio Cache Store\ntemp_audio/*.mp3 Cache",
+      "col": 3,
+      "row": 2,
+      "parent": "kb_box",
+      "width": 190,
+      "height": 80
+    },
+    {
+      "id": "arch_note",
+      "kind": "note",
+      "label": "100% Offline-First Architecture:\n• Models quantized to INT8 for local execution\n• Zero cloud API dependency after setup\n• Safe refusal when symptoms lack verified diagnosis",
+      "col": 1,
+      "row": 3,
+      "width": 250,
+      "height": 90
+    }
+  ],
+  "edges": [
+    { "from": "farmer", "to": "ui", "kind": "flow", "label": "speaks query" },
+    { "from": "ui", "to": "mic", "kind": "flow", "label": "mic stream" },
+    { "from": "mic", "to": "gateway", "kind": "flow", "label": "POST audio" },
+    { "from": "gateway", "to": "asr", "kind": "flow", "label": "WAV audio" },
+    { "from": "gateway", "to": "session", "kind": "light", "label": "track turns" },
+    { "from": "asr", "to": "rag", "kind": "flow", "label": "Indic transcript" },
+    { "from": "icar", "to": "rag", "kind": "flow", "label": "agronomy docs" },
+    { "from": "schemes", "to": "rag", "kind": "flow", "label": "schemes data" },
+    { "from": "rag", "to": "llm", "kind": "flow", "label": "verified context" },
+    { "from": "session", "to": "llm", "kind": "light", "label": "dialogue memory" },
+    { "from": "llm", "to": "tts", "kind": "flow", "label": "safe text answer" },
+    { "from": "tts", "to": "cache", "kind": "flow", "label": "save audio" },
+    { "from": "tts", "to": "gateway", "kind": "flow", "label": "audio response" },
+    { "from": "gateway", "to": "ui", "kind": "success", "label": "spoken audio stream" },
+    { "from": "ui", "to": "farmer", "kind": "success", "label": "hears response" }
+  ]
+}

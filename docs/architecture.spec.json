@@ -1,0 +1,268 @@
+{
+  "title": "Kisan Vaani — Offline AI Voice Assistant Architecture",
+  "canvasBackground": "white",
+  "style": {
+    "roughness": 1,
+    "fontFamily": 1,
+    "strokeWidth": 2,
+    "rounded": true
+  },
+  "layout": {
+    "originX": 0,
+    "originY": 0,
+    "colPitch": 320,
+    "rowPitch": 220
+  },
+  "boundaries": [
+    {
+      "id": "client_tier",
+      "kind": "scope",
+      "label": "1. Client Layer (Farmer Device)",
+      "color": "green",
+      "dashed": true
+    },
+    {
+      "id": "backend_tier",
+      "kind": "scope",
+      "label": "2. Local Edge Application Server (FastAPI on Port 8000)",
+      "color": "blue",
+      "dashed": true
+    },
+    {
+      "id": "pipeline_tier",
+      "kind": "scope",
+      "label": "3. Four-Stage Offline AI Pipeline",
+      "color": "violet",
+      "dashed": true,
+      "parent": "backend_tier"
+    },
+    {
+      "id": "knowledge_tier",
+      "kind": "scope",
+      "label": "4. Verified Agricultural Knowledge Base",
+      "color": "orange",
+      "dashed": true,
+      "parent": "backend_tier"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "farmer",
+      "kind": "actor",
+      "label": "Indian Farmer (Kisan)",
+      "col": 0,
+      "row": 0
+    },
+    {
+      "id": "ui",
+      "kind": "box",
+      "label": "React 19 + Vite Frontend",
+      "sublabel": "Native Script Selectors, Big Touch Mic",
+      "accent": "green",
+      "col": 0,
+      "row": 1,
+      "parent": "client_tier"
+    },
+    {
+      "id": "audio_recorder",
+      "kind": "round",
+      "label": "MediaRecorder Engine",
+      "sublabel": "16kHz Mono WAV / WebM Audio",
+      "accent": "green",
+      "col": 0,
+      "row": 2,
+      "parent": "client_tier"
+    },
+    {
+      "id": "api_gateway",
+      "kind": "round",
+      "label": "FastAPI Gateway",
+      "sublabel": "/api/voice/ask, /api/languages, /api/status",
+      "accent": "blue",
+      "col": 1,
+      "row": 1,
+      "parent": "backend_tier"
+    },
+    {
+      "id": "session_mgr",
+      "kind": "box",
+      "label": "Session Memory",
+      "sublabel": "Multi-turn conversation history",
+      "accent": "blue",
+      "col": 1,
+      "row": 2,
+      "parent": "backend_tier"
+    },
+    {
+      "id": "asr_engine",
+      "kind": "box",
+      "label": "Stage 1: ASR Engine",
+      "sublabel": "faster-whisper (int8) + VAD noise filter",
+      "accent": "violet",
+      "col": 2,
+      "row": 0,
+      "parent": "pipeline_tier"
+    },
+    {
+      "id": "rag_engine",
+      "kind": "box",
+      "label": "Stage 2: Indic RAG Retriever",
+      "sublabel": "BM25 + Semantic Search + Confidence Guard",
+      "accent": "violet",
+      "col": 2,
+      "row": 1,
+      "parent": "pipeline_tier"
+    },
+    {
+      "id": "llm_engine",
+      "kind": "box",
+      "label": "Stage 3: Grounded LLM Reasoner",
+      "sublabel": "Qwen2.5 / llama.cpp / Local Fallback",
+      "accent": "violet",
+      "col": 2,
+      "row": 2,
+      "parent": "pipeline_tier"
+    },
+    {
+      "id": "tts_engine",
+      "kind": "box",
+      "label": "Stage 4: Regional TTS Engine",
+      "sublabel": "edge-tts / pyttsx3 Indian Voice Generator",
+      "accent": "violet",
+      "col": 2,
+      "row": 3,
+      "parent": "pipeline_tier"
+    },
+    {
+      "id": "kb_docs",
+      "kind": "cylinder",
+      "label": "ICAR & KVK Advisory DB",
+      "sublabel": "Crop diseases, pest guides, NPK fertilizer",
+      "accent": "orange",
+      "col": 3,
+      "row": 0,
+      "parent": "knowledge_tier"
+    },
+    {
+      "id": "kb_schemes",
+      "kind": "cylinder",
+      "label": "Govt Schemes DB",
+      "sublabel": "PM-KISAN, PMFBY, Soil Health Card",
+      "accent": "orange",
+      "col": 3,
+      "row": 1,
+      "parent": "knowledge_tier"
+    },
+    {
+      "id": "audio_cache",
+      "kind": "cylinder",
+      "label": "Audio Cache Store",
+      "sublabel": "Cached synthesized audio for 0ms replay",
+      "accent": "grey",
+      "col": 3,
+      "row": 3,
+      "parent": "knowledge_tier"
+    },
+    {
+      "id": "offline_note",
+      "kind": "note",
+      "label": "100% Offline-First Architecture:\n• Models quantized to INT8 for CPU/edge execution\n• Zero cloud API dependency after one-time setup\n• Safe refusal when symptoms lack verified diagnosis",
+      "col": 0,
+      "row": 3,
+      "width": 320
+    }
+  ],
+  "edges": [
+    {
+      "from": "farmer",
+      "to": "ui",
+      "kind": "flow",
+      "label": "Speaks query"
+    },
+    {
+      "from": "ui",
+      "to": "audio_recorder",
+      "kind": "flow",
+      "label": "Mic active"
+    },
+    {
+      "from": "audio_recorder",
+      "to": "api_gateway",
+      "kind": "flow",
+      "label": "POST audio blob"
+    },
+    {
+      "from": "api_gateway",
+      "to": "session_mgr",
+      "kind": "light",
+      "label": "Update session"
+    },
+    {
+      "from": "api_gateway",
+      "to": "asr_engine",
+      "kind": "flow",
+      "label": "Raw audio"
+    },
+    {
+      "from": "asr_engine",
+      "to": "rag_engine",
+      "kind": "flow",
+      "label": "Recognized text"
+    },
+    {
+      "from": "kb_docs",
+      "to": "rag_engine",
+      "kind": "flow",
+      "label": "Agronomy docs"
+    },
+    {
+      "from": "kb_schemes",
+      "to": "rag_engine",
+      "kind": "flow",
+      "label": "Govt schemes"
+    },
+    {
+      "from": "rag_engine",
+      "to": "llm_engine",
+      "kind": "flow",
+      "label": "Grounded context"
+    },
+    {
+      "from": "session_mgr",
+      "to": "llm_engine",
+      "kind": "light",
+      "label": "Prior turns"
+    },
+    {
+      "from": "llm_engine",
+      "to": "tts_engine",
+      "kind": "flow",
+      "label": "Safe text answer"
+    },
+    {
+      "from": "tts_engine",
+      "to": "audio_cache",
+      "kind": "flow",
+      "label": "Cache audio"
+    },
+    {
+      "from": "tts_engine",
+      "to": "api_gateway",
+      "kind": "flow",
+      "label": "Spoken audio file",
+      "route": "avoid"
+    },
+    {
+      "from": "api_gateway",
+      "to": "ui",
+      "kind": "success",
+      "label": "Play spoken answer"
+    },
+    {
+      "from": "ui",
+      "to": "farmer",
+      "kind": "success",
+      "label": "Hears response"
+    }
+  ]
+}
