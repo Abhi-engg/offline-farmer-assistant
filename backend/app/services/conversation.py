@@ -141,6 +141,9 @@ class ConversationPipeline:
             "audio_url": tts_res.get("audio_url"),
             "audio_filename": tts_res.get("audio_filename"),
             "engine": llm_res.get("engine"),
+            "intent": llm_res.get("intent"),
+            "slots": llm_res.get("slots"),
+            "is_handled": llm_res.get("is_handled"),
             "metrics": {
                 "rag_latency": rag_latency,
                 "llm_latency": llm_res.get("latency_seconds", 0),
