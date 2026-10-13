@@ -130,3 +130,43 @@ async def add_knowledge_doc(doc: AddDocumentRequest):
     if not success:
         raise HTTPException(status_code=400, detail="Invalid document structure")
     return {"message": "Document added to local verified knowledge base successfully"}
+
+class FeedbackRequest(BaseModel):
+    query: str
+    language: str = "hi"
+    rating: str # 'helpful' or 'unhelpful'
+    comment: Optional[str] = None
+
+@router.post("/feedback")
+async def submit_feedback(req: FeedbackRequest):
+    """Records farmer or field worker feedback on response quality."""
+    from app.services.gap_telemetry import gap_telemetry
+    gap_telemetry.record_user_feedback(
+        query=req.query,
+        language=req.language,
+        rating=req.rating,
+        comment=req.comment
+    )
+    return {"message": "Feedback recorded successfully for continuous model improvement"}
+
+@router.get("/gaps/recent")
+async def list_recent_gaps(limit: int = 50):
+    """Lists unhandled farmer queries, missing crops, and low-confidence turns."""
+    from app.services.gap_telemetry import gap_telemetry
+    gaps = gap_telemetry.get_recent_gaps(limit=limit)
+    return {"count": len(gaps), "gaps": gaps}
+
+@router.get("/gaps/summary")
+async def gaps_summary():
+    """Returns analytics and clustering on unhandled queries to guide Phase 3 dataset creation."""
+    from app.services.gap_telemetry import gap_telemetry
+    return gap_telemetry.get_summary()
+
+@router.get("/gaps/export")
+async def export_gaps_file():
+    """Allows offline export/download of the JSONL unhandled questions ledger."""
+    from app.services.gap_telemetry import GAP_LOG_FILE
+    if not os.path.exists(GAP_LOG_FILE):
+        raise HTTPException(status_code=404, detail="No gap telemetry logs found yet")
+    return FileResponse(GAP_LOG_FILE, filename="unhandled_farmer_gaps.jsonl", media_type="application/jsonlines")
+

@@ -12,6 +12,7 @@ from app.models.asr import asr_engine
 from app.models.llm import llm_engine
 from app.models.tts import tts_engine
 from app.services.retrieval import retriever
+from app.services.gap_telemetry import gap_telemetry
 from app.languages.registry import get_language_config
 
 logger = logging.getLogger(__name__)
@@ -127,6 +128,16 @@ class ConversationPipeline:
 
         # 3. Text-to-Speech Synthesis (TTS)
         tts_res = await self.tts.synthesize(text=answer_text, language_code=language_code)
+
+        # 4. Record Gap Telemetry if query was unhandled or missing knowledge
+        gap_telemetry.evaluate_and_record(
+            query=query,
+            language=language_code,
+            intent_res=type('obj', (object,), {'intent': llm_res.get('intent'), 'slots': llm_res.get('slots', {})})(),
+            rag_docs=retrieved_docs,
+            answer=answer_text,
+            is_handled=llm_res.get("is_handled", True)
+        )
 
         total_latency = round(time.time() - pipeline_start, 3)
 

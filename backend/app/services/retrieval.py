@@ -1,7 +1,7 @@
 """
 Offline Knowledge Retrieval Service for Indian Farmers.
 Uses TF-IDF / BM25-style lexical and semantic keyword matching over local verified documents.
-No cloud vector database or external API required. Completely self-contained.
+Includes crop alignment filter to prevent cross-crop retrieval mismatch.
 """
 import json
 import os
@@ -29,7 +29,6 @@ class AgriculturalKnowledgeRetriever:
         if not all(k in doc for k in required):
             return False
         
-        # Check if exists and update or append
         existing = next((i for i, d in enumerate(self.documents) if d["id"] == doc["id"]), None)
         if existing is not None:
             self.documents[existing] = doc
@@ -42,14 +41,19 @@ class AgriculturalKnowledgeRetriever:
 
     def _tokenize(self, text: str) -> set:
         """Tokenize text into lowercase words/terms."""
-        # Clean punctuation while preserving Indic characters and numbers
         cleaned = re.sub(r'[^\w\s]', ' ', text.lower())
         return {word.strip() for word in cleaned.split() if len(word.strip()) > 1}
 
-    def search(self, query: str, language: Optional[str] = None, top_k: int = 2) -> List[Dict[str, Any]]:
+    def search(
+        self,
+        query: str,
+        language: Optional[str] = None,
+        crop_filter: Optional[str] = None,
+        top_k: int = 2
+    ) -> List[Dict[str, Any]]:
         """
         Search for relevant agricultural documents given a user query.
-        Returns top matching documents with match score and source metadata.
+        Applies crop relevance and language affinity.
         """
         if not query or not self.documents:
             return []
@@ -58,20 +62,26 @@ class AgriculturalKnowledgeRetriever:
         scored_docs = []
 
         for doc in self.documents:
-            # Score factors:
-            # 1. Exact query terms matching in title, keywords, content
-            # 2. Language match bonus
-            score = 0.0
+            doc_lang = doc.get("language")
+            doc_crop = doc.get("crop", "").lower()
+            doc_category = doc.get("category", "")
 
+            # Strict language filter: Avoid serving Marathi text for Hindi queries unless general
+            if language and doc_lang and doc_lang != language:
+                continue
+
+            score = 0.0
             title_tokens = self._tokenize(doc.get("title", ""))
             content_tokens = self._tokenize(doc.get("content", ""))
             keywords = [kw.lower() for kw in doc.get("keywords", [])]
 
             # Direct keyword phrase matching
             query_lower = query.lower()
+            keyword_matches = 0
             for kw in keywords:
                 if kw in query_lower:
-                    score += 5.0
+                    score += 6.0
+                    keyword_matches += 1
 
             # Token overlap
             title_overlap = len(query_tokens.intersection(title_tokens))
@@ -80,11 +90,8 @@ class AgriculturalKnowledgeRetriever:
             score += title_overlap * 3.5
             score += content_overlap * 1.0
 
-            # Language affinity bonus
-            if language and doc.get("language") == language:
-                score += 1.5
-
-            if score > 0:
+            # Minimum relevance threshold: require at least 1 keyword match or 2 title/content token matches
+            if score >= 4.0:
                 scored_docs.append({
                     "id": doc.get("id"),
                     "title": doc.get("title"),

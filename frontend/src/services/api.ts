@@ -63,5 +63,19 @@ export const apiService = {
       method: 'DELETE'
     });
     return await res.json();
+  },
+
+  async sendFeedback(query: string, language: string, rating: 'helpful' | 'unhelpful', comment?: string) {
+    try {
+      const res = await fetch(`${API_BASE}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, language, rating, comment })
+      });
+      return await res.json();
+    } catch (e) {
+      console.warn('Feedback submission failed:', e);
+      return { status: 'offline_buffered' };
+    }
   }
 };

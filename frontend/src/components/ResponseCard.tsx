@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Volume2, VolumeX, BookOpen, Clock, User, Bot, AlertTriangle } from 'lucide-react';
+import { Volume2, VolumeX, BookOpen, Clock, User, Bot, AlertTriangle, ThumbsUp, ThumbsDown, Check } from 'lucide-react';
 import type { ConversationTurn } from '../types';
+import { apiService } from '../services/api';
 
 interface ResponseCardProps {
   turn: ConversationTurn;
@@ -9,7 +10,13 @@ interface ResponseCardProps {
 
 export const ResponseCard: React.FC<ResponseCardProps> = ({ turn, autoPlayAudio = true }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [feedbackGiven, setFeedbackGiven] = useState<'helpful' | 'unhelpful' | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handleFeedback = (rating: 'helpful' | 'unhelpful') => {
+    setFeedbackGiven(rating);
+    apiService.sendFeedback(turn.query, turn.language || 'hi', rating);
+  };
 
   useEffect(() => {
     if (turn.audio_url && autoPlayAudio) {
@@ -126,6 +133,33 @@ export const ResponseCard: React.FC<ResponseCardProps> = ({ turn, autoPlayAudio 
             <p>
               यह सलाह ऑफ़लाइन कृषि ज्ञानकोष पर आधारित है। रासायनिक छिड़काव या गंभीर नुकसान की स्थिति में नजदीकी कृषि विज्ञान केंद्र (KVK) के विशेषज्ञ से अवश्य परामर्श करें।
             </p>
+          </div>
+
+          {/* Farmer Feedback & Quality Rating */}
+          <div className="mt-3.5 flex items-center justify-between pt-2.5 border-t border-slate-100/80">
+            <span className="text-xs text-slate-500 font-medium">क्या यह सलाह उपयोगी थी? (Helpful?)</span>
+            {feedbackGiven ? (
+              <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-md">
+                <Check className="w-3.5 h-3.5" /> धन्यवाद, प्रतिक्रिया दर्ज हुई
+              </span>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleFeedback('helpful')}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-slate-600 hover:text-emerald-700 bg-slate-50 hover:bg-emerald-50 rounded-lg transition-colors border border-slate-200/60 font-medium"
+                  title="मददगार रहा"
+                >
+                  <ThumbsUp className="w-3.5 h-3.5" /> हाँ (Yes)
+                </button>
+                <button
+                  onClick={() => handleFeedback('unhelpful')}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-slate-600 hover:text-rose-700 bg-slate-50 hover:bg-rose-50 rounded-lg transition-colors border border-slate-200/60 font-medium"
+                  title="सुधार की जरूरत"
+                >
+                  <ThumbsDown className="w-3.5 h-3.5" /> नहीं (No)
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Pipeline Latency Metrics */}
